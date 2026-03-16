@@ -8,9 +8,9 @@ namespace VanguardRecon
 {
   UserDiscovery::UserDiscovery()
   {
-    PingHost("127.0.0.1");
+    
   }
-
+  
   uint16_t UserDiscovery::CalculateCheckSum(const void* data, size_t len)
   {
     const uint16_t* ptr = (const uint16_t*)data;
@@ -56,16 +56,16 @@ namespace VanguardRecon
     
     recvfrom(sock,&buffer,sizeof(buffer),0,(struct sockaddr*)&client,&destLen);
 
-    ICMPheader* replay = (ICMPheader*)(buffer+20);
-
-    if(replay->type == 0)
-    {
-      close(sock);
-      std::cout<<"OK"<<"\n";
-      return true;
-    }
     close(sock);
+    int headerLength = (buffer[0] & 0x0F) * 4;
+
+    ICMPheader* replay = (ICMPheader*)(buffer+headerLength);
+
+    if(replay->type == 0 && ntohs(replay->id) == 123)
+      return true;
+
     return false;
+    
 
   }
 }

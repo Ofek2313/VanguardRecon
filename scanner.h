@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 namespace VanguardRecon
 {
@@ -24,14 +26,19 @@ namespace VanguardRecon
     public:
       void ScanLocalNetwork();
       std::vector<scanResult> ScanPorts(const std::string& ip);
-      scanResult ScanPort(int port); 
+     void OutputScanResults(std::vector<scanResult> scanResults);
       Scanner(const ScanConfig& scanConfig);
       ~Scanner();
 
     private:
+      std::mutex portMutex;
+      void ScanPort(const std::string& ip, int port, std::vector<scanResult>* scanResults);
       std::string grabBanner(int sock);
       ScanConfig scanConfig;
       std::string subnetIP;
+     
+
+
   };
 
 
