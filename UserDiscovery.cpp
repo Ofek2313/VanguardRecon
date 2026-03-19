@@ -1,4 +1,5 @@
 #include "UserDiscovery.h"
+#include "Network/RawSocket.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <iostream>
@@ -45,18 +46,16 @@ namespace VanguardRecon
   bool UserDiscovery::PingHost(const std::string& ip)
   {
     char buffer[1024];
-    int sock = socket(AF_INET,SOCK_RAW,IPPROTO_ICMP);
+    VanguardRecon::RawSocket RawSocket;
+    RawSocket.OpenSocket(IPPROTO_ICMP);
+
+  
     ICMPheader data = CraftEchoPacket();
-    struct sockaddr_in client;
-    client.sin_family = AF_INET;
-    inet_pton(AF_INET,ip.c_str(),&client.sin_addr);
+    RawSocket.SendTo(&data,sizeof(data),ip);
 
-    socklen_t destLen = sizeof(client);
-    sendto(sock,&data,sizeof(data),0,(struct sockaddr*)&client,sizeof(client));
+    RawSocket.ReceiveFrom(&buffer,sizeof(buffer));
     
-    recvfrom(sock,&buffer,sizeof(buffer),0,(struct sockaddr*)&client,&destLen);
-
-    close(sock);
+   
     int headerLength = (buffer[0] & 0x0F) * 4;
 
     ICMPheader* replay = (ICMPheader*)(buffer+headerLength);
@@ -68,4 +67,14 @@ namespace VanguardRecon
     
 
   }
+
+  // ARPheader UserDiscovery::CraftArpPacket()
+  // {
+  //   ARPheader arpHeader;
+  //   arpHeader.hardware = 1;
+  //   arpHeader.protocol = 0x800;
+  //   arpHeader.hardwareLength = 6;
+  //   arpHeader.protocolLength = 4;
+  //   arpHeader.operation = 1;
+  // }
 }

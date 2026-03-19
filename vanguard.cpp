@@ -8,14 +8,15 @@
 int main(int argc, char* argv[])
 {
 
-  VanguardRecon::ScanConfig scanConfig{1,80,argv[1]};
+  VanguardRecon::ScanConfig scanConfig{1,100,argv[1]};
   VanguardRecon::Scanner scanner(scanConfig);
   // std::vector<VanguardRecon::scanResult> results = scanner.ScanPorts(argv[1]);
   // for(auto var : results) {
   //   if(var.openStatus)
   //      std::cout<< "#" <<var.port<< ": " << var.openStatus << var.banner << "\n";
   // }
-  scanner.OutputScanResults(scanner.ScanPorts("10.0.0.138"));
+  VanguardRecon::UserDiscovery UserDisocvery;
+  std::cout<< UserDisocvery.PingHost("10.0.0.138") << '\n';
   
  
   
