@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "UserDiscovery.h"
+#include "HostDiscovery.h"
 #include <thread>
 #include <mutex>
 #include "scanner.h"
@@ -99,11 +99,11 @@ namespace VanguardRecon
 
  void Scanner::ScanLocalNetwork()
  {
-    UserDiscovery userDiscovery;
-    bool result = userDiscovery.PingHost("10.0.0.138");
+    HostDiscovery userDiscovery;
+    bool result = userDiscovery.PingHost(scanConfig.ip);
     std::cout<<result;
-    if(userDiscovery.PingHost("10.0.0.138"))
-        OutputScanResults(ScanPorts("10.0.0.138"));
+    if(result)
+        OutputScanResults(ScanPorts(scanConfig.ip));
 
  }
 }

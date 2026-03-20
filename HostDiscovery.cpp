@@ -1,5 +1,6 @@
-#include "UserDiscovery.h"
-#include "Network/RawSocket.h"
+#include "HostDiscovery.h"
+
+#include "Network/IpAddress.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <iostream>
@@ -7,12 +8,12 @@
 
 namespace VanguardRecon
 {
-  UserDiscovery::UserDiscovery()
+  HostDiscovery::HostDiscovery()
   {
-    
+    m_socket.OpenSocket(IPPROTO_ICMP);
   }
   
-  uint16_t UserDiscovery::CalculateCheckSum(const void* data, size_t len)
+  uint16_t HostDiscovery::CalculateCheckSum(const void* data, size_t len)
   {
     const uint16_t* ptr = (const uint16_t*)data;
     uint32_t sum = 0;
@@ -30,7 +31,7 @@ namespace VanguardRecon
 
     return (uint16_t)~sum;
   }
-  ICMPheader UserDiscovery::CraftEchoPacket()
+  ICMPheader HostDiscovery::CraftEchoPacket()
   {
     ICMPheader header;
     header.type = 0x8;
@@ -39,36 +40,58 @@ namespace VanguardRecon
     header.sequence = htons(1);
     header.id = htons(123);
 
-    header.checkSum = UserDiscovery::CalculateCheckSum(&header,sizeof(header));
+    header.checkSum = HostDiscovery::CalculateCheckSum(&header,sizeof(header));
     
     return header;
   }
-  bool UserDiscovery::PingHost(const std::string& ip)
+  bool HostDiscovery::PingHost(const std::string& ip)
   {
     char buffer[1024];
+    IpAddress Ip(ip);
     VanguardRecon::RawSocket RawSocket;
-    RawSocket.OpenSocket(IPPROTO_ICMP);
+
+    
 
   
     ICMPheader data = CraftEchoPacket();
-    RawSocket.SendTo(&data,sizeof(data),ip);
+    m_socket.SendTo(&data,sizeof(data),Ip);
 
-    RawSocket.ReceiveFrom(&buffer,sizeof(buffer));
+    m_socket.ReceiveFrom(&buffer,sizeof(buffer));
     
    
     int headerLength = (buffer[0] & 0x0F) * 4;
-
+    uint8_t TTL = buffer[8];
     ICMPheader* replay = (ICMPheader*)(buffer+headerLength);
 
     if(replay->type == 0 && ntohs(replay->id) == 123)
-      return true;
+    {
+        std::cout<<(int)TTL;
+        return true;
+        
+    }
+      
 
     return false;
     
 
   }
+  std::vector<IpAddress> HostDiscovery::AliveHostDiscovery()
+  {
+    std::vector<IpAddress> IpAddresses;
+    for (size_t i = 1; i < 254; i++)
+    {
+      if(PingHost("10.0.0." + std::to_string(i)))
+      {
+        IpAddresses.push_back(IpAddress("10.0.0." + std::to_string(i)));
+        std::cout<<"10.0.0." + std::to_string(i) << '\n';
 
-  // ARPheader UserDiscovery::CraftArpPacket()
+      }
+
+    }
+    return IpAddresses;
+  }
+
+  // ARPheader HostDiscovery::CraftArpPacket()
   // {
   //   ARPheader arpHeader;
   //   arpHeader.hardware = 1;

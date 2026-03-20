@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 #include <cstdint>
-
+#include <vector>
+#include "Network/IpAddress.h"
+#include "Network/RawSocket.h"
 namespace VanguardRecon
 {
 
@@ -27,14 +29,16 @@ namespace VanguardRecon
     uint8_t targetProtocolAddress[4];
 
   };
-  class UserDiscovery
+  class HostDiscovery
   {
     public:
       bool PingHost(const std::string& ip);
-      UserDiscovery();
+      std::vector<IpAddress> AliveHostDiscovery();
+      HostDiscovery();
     private:
       uint16_t CalculateCheckSum(const void* data, size_t len);
       ICMPheader CraftEchoPacket();
+      RawSocket m_socket;
       // ARPheader CraftArpPacket();
   };
 }
